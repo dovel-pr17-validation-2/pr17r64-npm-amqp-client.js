@@ -1,0 +1,58 @@
+name: Release NPM
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org/
+      # Trusted Publishing (OIDC) needs npm >= 11.5.1; ensure it regardless of the bundled version
+      - run: npm install -g npm@latest
+      - run: npm install
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+      - run: npm run build
+      # No NODE_AUTH_TOKEN: npm authenticates to the registry via OIDC trusted publishing
+      - run: npm publish --access public --provenance
+
+        # create GitHub release
+      - name: Extract release notes
+        id: extract_release_notes
+        run: |
+          # Extract version from tag (remove 'v' prefix)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          # Extract changelog section for this version with better handling
+          if grep -q "## \[$VERSION\]" CHANGELOG.md; then
+            awk "/^## \[$VERSION\]/ {flag=1; next} /^## \[/ && flag {exit} flag && /\S/ {print}" CHANGELOG.md > release_notes.md
+            echo "Release notes extracted for version $VERSION:"
+            cat release_notes.md
+          else
+            echo "No changelog entry found for version $VERSION" > release_notes.md
+            echo "Warning: No changelog entry found for version $VERSION"
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          name: Release ${{ steps.extract_release_notes.outputs.version }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          files: |
+            dist/amqp-websocket-client.mjs
+            dist/amqp-websocket-client.mjs.map

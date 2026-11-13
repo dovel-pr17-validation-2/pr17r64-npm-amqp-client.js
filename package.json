@@ -1,0 +1,99 @@
+{
+  "name": "@cloudamqp/amqp-client",
+  "version": "4.1.2",
+  "description": "AMQP 0-9-1 client for RabbitMQ, LavinMQ and other AMQP brokers, both for browsers (WebSocket) and node (TCP Socket)",
+  "type": "module",
+  "main": "lib/cjs/index.js",
+  "types": "types/index.d.ts",
+  "browser": {
+    "AMQPClient": false,
+    "buffer": false,
+    "net": false,
+    "tls": false
+  },
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "import": "./lib/mjs/index.js",
+      "require": "./lib/cjs/index.js"
+    },
+    "./*": {
+      "types": "./types/*.d.ts",
+      "import": "./lib/mjs/*.js",
+      "require": "./lib/cjs/*.js"
+    }
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "docs": "typedoc src/index.ts",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit --project tsconfig.check.json",
+    "test": "vitest run --coverage",
+    "test:local": "vitest run --coverage test/test.ts",
+    "test-browser": "vitest --config ./vitest.config.browser.ts",
+    "update-changelog": "node scripts/update-changelog.js",
+    "create-tag": "node scripts/release-tag.js",
+    "prebuild": "node scripts/clean.js",
+    "build": "tsc && tsc --module commonjs --outDir lib/cjs && tsc --emitDeclarationOnly --removeComments false && rollup -c",
+    "postbuild": "node scripts/write-cjs-package.js",
+    "prepare": "npm run build",
+    "preversion": "npm run test:local",
+    "version": "node scripts/update-version.js && npm run update-changelog && npm run format && git add -A",
+    "postversion": "git commit -m \"Release v$npm_package_version\" && npm run create-tag && git push && git push --tags",
+    "release": "npm version patch --no-git-tag-version",
+    "release:minor": "npm version minor --no-git-tag-version",
+    "release:major": "npm version major --no-git-tag-version"
+  },
+  "files": [
+    "src/",
+    "lib/",
+    "types/",
+    "dist/"
+  ],
+  "repository": "github:cloudamqp/amqp-client.js",
+  "keywords": [
+    "amqp",
+    "amqp-0-9-1",
+    "amqp-client",
+    "amqplib",
+    "rabbitmq",
+    "lavinmq",
+    "cloudamqp",
+    "message-queue",
+    "messaging",
+    "queue",
+    "pubsub",
+    "broker",
+    "websocket",
+    "browser",
+    "typescript"
+  ],
+  "author": "CloudAMQP <contact@cloudamqp.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/cloudamqp/amqp-client.js/issues"
+  },
+  "homepage": "https://github.com/cloudamqp/amqp-client.js#readme",
+  "devDependencies": {
+    "@types/node": "*",
+    "@vitest/browser": "*",
+    "@vitest/browser-playwright": "*",
+    "@vitest/coverage-v8": "*",
+    "eslint": "*",
+    "eslint-config-prettier": "*",
+    "playwright": "*",
+    "prettier": "*",
+    "rollup": "*",
+    "rollup-plugin-sourcemaps": "*",
+    "ts-node": "*",
+    "typedoc": "*",
+    "typescript": "*",
+    "typescript-eslint": "*",
+    "vitest": "*"
+  }
+}
